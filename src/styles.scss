@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --gf-canvas: 210 20% 96%;
+    --gf-surface: 0 0% 100%;
+    --gf-elevated: 210 18% 98%;
+    --gf-border: 210 16% 86%;
+    --gf-muted: 210 11% 43%;
+    --gf-subtle: 210 16% 93%;
+    --gf-fg: 222 42% 12%;
+    --gf-fg-muted: 215 14% 38%;
+    --gf-accent: 173 56% 36%;
+    --gf-accent-fg: 166 76% 97%;
+    --gf-warn: 33 90% 48%;
+    --gf-danger: 0 70% 48%;
+    --gf-ok: 152 64% 34%;
+    --gf-info: 201 85% 45%;
+    --gf-shadow: 222 40% 12%;
+    --gf-sidebar: 210 22% 97%;
+  }
+
+  .dark {
+    color-scheme: dark;
+    --gf-canvas: 222 14% 16%;
+    --gf-surface: 222 12% 21%;
+    --gf-elevated: 217 10% 25%;
+    --gf-border: 217 8% 34%;
+    --gf-muted: 215 12% 58%;
+    --gf-subtle: 217 8% 28%;
+    --gf-fg: 210 18% 96%;
+    --gf-fg-muted: 215 12% 72%;
+    --gf-accent: 172 52% 50%;
+    --gf-accent-fg: 166 90% 8%;
+    --gf-warn: 36 92% 56%;
+    --gf-danger: 0 76% 60%;
+    --gf-ok: 152 56% 46%;
+    --gf-info: 199 78% 58%;
+    --gf-shadow: 222 24% 4%;
+    --gf-sidebar: 222 12% 19%;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-gf-canvas text-gf-fg font-sans text-[15px] leading-relaxed antialiased;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
