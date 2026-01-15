@@ -1,0 +1,38 @@
+<div class="min-h-dvh bg-gf-canvas">
+  <div
+    class="fixed inset-0 z-40 sm:hidden"
+    [class.pointer-events-none]="!mobileNavOpen()"
+    [attr.aria-hidden]="!mobileNavOpen()"
+  >
+    <div
+      class="absolute inset-0 bg-gf-fg/30 backdrop-blur-[1px] motion-reduce:backdrop-blur-none transition-opacity duration-gf"
+      [class.opacity-0]="!mobileNavOpen()"
+      [class.opacity-100]="mobileNavOpen()"
+      (click)="closeMobile()"
+    ></div>
+    <div
+      class="absolute inset-y-0 left-0 w-[min(18rem,88vw)] max-w-full border-r border-gf-border bg-gf-surface shadow-gf motion-reduce:transition-none transition-transform duration-gf ease-out"
+      [class.-translate-x-full]="!mobileNavOpen()"
+      [class.translate-x-0]="mobileNavOpen()"
+    >
+      <gf-sidebar [collapsed]="false" [mobileOpen]="true" (closeMobile)="closeMobile()" />
+    </div>
+  </div>
+
+  <div class="flex min-h-dvh">
+    <aside class="hidden shrink-0 sm:block">
+      <gf-sidebar [collapsed]="sidebarCollapsed()" />
+    </aside>
+
+    <div class="flex min-w-0 flex-1 flex-col">
+      <gf-top-bar
+        [sidebarCollapsed]="sidebarCollapsed()"
+        (toggleSidebar)="toggleSidebar()"
+        (openMobileNav)="openMobile()"
+      />
+      <main class="gf-main-inner flex-1 overflow-x-hidden">
+        <router-outlet />
+      </main>
+    </div>
+  </div>
+</div>
