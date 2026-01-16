@@ -1,0 +1,96 @@
+<nav
+  class="flex h-full min-h-0 flex-col border-r border-gf-border/80 bg-[hsl(var(--gf-sidebar))]"
+  [class.w-[4.25rem]]="collapsed() && !mobileOpen()"
+  [class.w-[15.5rem]]="!collapsed() || mobileOpen()"
+>
+  <div class="flex h-[3.75rem] shrink-0 items-center gap-3 border-b border-gf-border/80 px-3.5">
+    <div
+      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-gf bg-gf-accent text-xs font-bold tracking-tight text-gf-accent-fg shadow-gf-inset"
+      aria-hidden="true"
+    >
+      GF
+    </div>
+    @if (!collapsed() || mobileOpen()) {
+      <div class="min-w-0">
+        <p class="truncate font-display text-sm font-semibold tracking-tight text-gf-fg">GarageFlow</p>
+        <p class="truncate text-[11px] leading-tight text-gf-fg-muted">Ringsend</p>
+      </div>
+    }
+  </div>
+
+  <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 py-4">
+    @for (group of navGroups; track group.label) {
+      <div class="mb-5 last:mb-0">
+        @if (!collapsed() || mobileOpen()) {
+          <p class="mb-2 px-2 text-gf-kicker uppercase text-gf-fg-muted/90">{{ group.label }}</p>
+        }
+        <div class="space-y-0.5">
+          @for (item of group.items; track item.path) {
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="gf-nav-active"
+              [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }"
+              class="gf-nav-item"
+              (click)="closeMobile.emit()"
+            >
+              <span class="gf-nav-icon" [ngSwitch]="item.icon">
+                <ng-container *ngSwitchCase="'dash'">
+                  <svg class="h-[1.125rem] w-[1.125rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65">
+                    <path d="M4 13h6V4H4v9zm10 7h6v-9h-6v9zM4 20h6v-5H4v5zm10-13h6V4h-6v3z" />
+                  </svg>
+                </ng-container>
+                <ng-container *ngSwitchCase="'orders'">
+                  <svg class="h-[1.125rem] w-[1.125rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65">
+                    <path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" stroke-linecap="round" />
+                  </svg>
+                </ng-container>
+                <ng-container *ngSwitchCase="'people'">
+                  <svg class="h-[1.125rem] w-[1.125rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                </ng-container>
+                <ng-container *ngSwitchCase="'cal'">
+                  <svg class="h-[1.125rem] w-[1.125rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <path d="M16 2v4M8 2v4M3 10h18" />
+                  </svg>
+                </ng-container>
+                <ng-container *ngSwitchCase="'chart'">
+                  <svg class="h-[1.125rem] w-[1.125rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65">
+                    <path d="M18 20V10M12 20V4M6 20v-6" stroke-linecap="round" />
+                  </svg>
+                </ng-container>
+                <ng-container *ngSwitchCase="'doc'">
+                  <svg class="h-[1.125rem] w-[1.125rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" />
+                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+                  </svg>
+                </ng-container>
+              </span>
+              @if (!collapsed() || mobileOpen()) {
+                <span class="truncate">{{ item.label }}</span>
+              }
+            </a>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="shrink-0 border-t border-gf-border/80 p-3">
+    @if (!collapsed() || mobileOpen()) {
+      <div class="rounded-gf border border-gf-border/70 bg-gf-surface/80 px-3 py-2.5 shadow-gf-inset dark:bg-gf-elevated/50">
+        <p class="text-[11px] leading-snug text-gf-fg-muted">
+          Signed in as <span class="font-medium text-gf-fg">n.keane</span>
+        </p>
+        <p class="mt-0.5 text-[11px] text-gf-fg-muted">Service manager · Bay desk</p>
+      </div>
+    } @else {
+      <div class="mx-auto h-8 w-8 rounded-full border border-gf-border bg-gf-surface text-center text-[10px] font-semibold leading-8 text-gf-fg-muted">
+        NK
+      </div>
+    }
+  </div>
+</nav>
