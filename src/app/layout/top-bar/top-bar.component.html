@@ -1,0 +1,95 @@
+<header
+  class="sticky top-0 z-30 flex min-h-[3.75rem] flex-wrap items-center gap-3 border-b border-gf-border/90 bg-gf-canvas/85 px-3 py-2.5 backdrop-blur-md supports-[backdrop-filter]:bg-gf-canvas/75 sm:gap-4 sm:px-5"
+>
+  <button
+    type="button"
+    class="gf-focus inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-gf border border-gf-border/90 bg-gf-surface text-gf-fg shadow-gf-inset sm:hidden"
+    (click)="openMobileNav.emit()"
+    aria-label="Open menu"
+  >
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+      <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round" />
+    </svg>
+  </button>
+
+  <button
+    type="button"
+    class="gf-focus hidden h-10 w-10 shrink-0 items-center justify-center rounded-gf border border-gf-border/90 bg-gf-surface text-gf-fg-muted shadow-gf-inset transition-colors hover:text-gf-fg sm:inline-flex"
+    (click)="toggleSidebar.emit()"
+    [attr.aria-label]="sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+  >
+    @if (sidebarCollapsed()) {
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6.5h16v11H4z" />
+        <path stroke-linecap="round" d="M9 6.5v11" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M14 10l3 2.5-3 2.5" />
+      </svg>
+    } @else {
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6.5h16v11H4z" />
+        <path stroke-linecap="round" d="M9 6.5v11" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l-3 2.5 3 2.5" />
+      </svg>
+    }
+  </button>
+
+  <div class="min-w-0 flex-1 basis-[14rem] sm:basis-auto">
+    <label class="relative block max-w-xl">
+      <span class="sr-only">Search open file</span>
+      <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gf-fg-muted">
+        <svg class="h-4 w-4 shrink-0 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M20 20l-3-3" stroke-linecap="round" />
+        </svg>
+      </span>
+      <input
+        type="search"
+        class="gf-input h-10 pl-10 pr-3"
+        placeholder="Search RO, customer, reg…"
+        [ngModel]="ui.globalSearch()"
+        (ngModelChange)="ui.setGlobalSearch($event)"
+        autocomplete="off"
+      />
+    </label>
+    <p class="mt-1 hidden text-[11px] text-gf-fg-muted sm:block">Also filters the work order list.</p>
+  </div>
+
+  <div class="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+    <button
+      type="button"
+      class="gf-focus relative inline-flex h-10 w-10 items-center justify-center rounded-gf border border-gf-border/90 bg-gf-surface text-gf-fg-muted shadow-gf-inset transition-colors hover:text-gf-fg"
+      aria-label="Notifications"
+    >
+      <svg class="h-[1.15rem] w-[1.15rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-linecap="round" />
+      </svg>
+      <span class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-gf-accent shadow-[0_0_0_2px_hsl(var(--gf-surface))]"></span>
+    </button>
+
+    <button
+      type="button"
+      class="gf-focus inline-flex h-10 w-10 items-center justify-center rounded-gf border border-gf-border/90 bg-gf-surface text-gf-fg-muted shadow-gf-inset transition-colors hover:text-gf-fg"
+      (click)="toggleTheme()"
+      [attr.aria-label]="theme.resolvedDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+    >
+      @if (theme.resolvedDark()) {
+        <svg class="h-[1.15rem] w-[1.15rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke-linecap="round" />
+        </svg>
+      } @else {
+        <svg class="h-[1.15rem] w-[1.15rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke-linejoin="round" />
+        </svg>
+      }
+    </button>
+
+    <div
+      class="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gf-border/90 bg-gf-elevated text-[11px] font-semibold tracking-tight text-gf-fg sm:flex"
+      aria-hidden="true"
+    >
+      NK
+    </div>
+  </div>
+</header>
