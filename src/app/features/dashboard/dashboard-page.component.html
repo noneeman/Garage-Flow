@@ -1,0 +1,208 @@
+<div class="gf-page">
+  <header class="gf-page-head">
+    <div>
+      <p class="gf-page-kicker">Dashboard</p>
+      <h1 class="gf-page-title">Shift overview</h1>
+      <p class="gf-page-desc">
+        Tue 12 May 2026 · morning shift. Open file and today’s diary; open a work order for line detail.
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a routerLink="/work-orders" class="gf-btn-secondary">Work orders</a>
+      <a routerLink="/schedule" class="gf-btn-primary">Schedule</a>
+    </div>
+  </header>
+
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <gf-kpi-card title="Active on file" [value]="kpis().activeJobs.toString()" hint="Bays, diag, booked" />
+    <gf-kpi-card
+      title="Awaiting approval"
+      [value]="kpis().waitingApproval.toString()"
+      hint="Sign-off on added lines"
+    />
+    <gf-kpi-card title="Arrivals today" [value]="kpis().todaysBookings.toString()" hint="Slots incl. handovers" />
+    <gf-kpi-card
+      title="Revenue (week)"
+      [value]="(kpis().revenueWeek | currency : 'EUR' : 'symbol' : '1.0-0' : 'en-IE') ?? ''"
+      hint="Closed + approved billing"
+    />
+    <gf-kpi-card
+      title="Avg repair order"
+      [value]="(kpis().avgRepairOrder | currency : 'EUR' : 'symbol' : '1.0-0' : 'en-IE') ?? ''"
+      hint="Rolling 30 days"
+    />
+    <gf-kpi-card
+      title="Technician load"
+      [value]="(kpis().techUtilizationPct | number : '1.0-0') + '%'"
+      hint="Billed vs rostered hours"
+    />
+  </div>
+
+  <div class="mt-6 grid gap-5 lg:grid-cols-12 lg:items-stretch">
+    <section class="gf-card flex flex-col lg:col-span-8">
+      <div class="gf-card-header">
+        <div>
+          <h2 class="gf-card-title">Labour vs plan</h2>
+          <p class="gf-card-sub">Billed hours by day.</p>
+        </div>
+        <span class="gf-pill-quiet tabular-nums">{{ workloadHeadline() }}</span>
+      </div>
+      <div class="flex flex-1 flex-col px-5 pb-5 pt-2 sm:px-6 sm:pb-6">
+        <gf-bar-chart [labels]="workloadLabels()" [values]="workloadValues()" />
+      </div>
+    </section>
+
+    <section class="gf-card flex flex-col lg:col-span-4">
+      <div class="gf-card-header">
+        <div>
+          <h2 class="gf-card-title">Job mix</h2>
+          <p class="gf-card-sub">Open repair orders by status.</p>
+        </div>
+      </div>
+      <div class="flex flex-1 flex-col items-center justify-center gap-2 px-4 pb-6 pt-2">
+        <gf-donut-chart [labels]="statusDonutLabels()" [values]="statusDonutValues()" />
+      </div>
+    </section>
+  </div>
+
+  <div class="mt-6 grid gap-5 lg:grid-cols-2">
+    <section class="gf-card flex min-h-[22rem] flex-col">
+      <div class="gf-card-header">
+        <div>
+          <h2 class="gf-card-title">Shop log</h2>
+          <p class="gf-card-sub">Newest first.</p>
+        </div>
+        <span class="gf-pill-quiet">Last 24h</span>
+      </div>
+      <ul class="min-h-0 flex-1 divide-y divide-gf-border/80 overflow-y-auto">
+        @for (ev of activity(); track ev.id) {
+          <li class="flex gap-4 px-5 py-3.5 sm:px-6">
+            <span
+              class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-gf border border-gf-border/80 bg-gf-elevated font-mono text-xs text-gf-accent shadow-gf-inset"
+              [attr.title]="ev.kind"
+              >{{ activityIcon(ev.kind) }}</span
+            >
+            <div class="min-w-0 flex-1">
+              <p class="text-[0.9375rem] leading-snug text-gf-fg">{{ ev.message }}</p>
+              <p class="mt-1.5 text-xs text-gf-fg-muted">
+                <span class="tabular-nums">{{ ev.at | date : 'HH:mm' }}</span>
+                · {{ ev.actor }}
+                @if (ev.relatedRo) {
+                  <span class="font-mono text-gf-fg"> · {{ ev.relatedRo }}</span>
+                }
+              </p>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="gf-card flex flex-col">
+      <div class="gf-card-header">
+        <div>
+          <h2 class="gf-card-title">Approval queue</h2>
+          <p class="gf-card-sub">Blocking parts, labour, or pickup.</p>
+        </div>
+        <a routerLink="/work-orders" class="gf-btn-ghost text-xs font-semibold text-gf-accent">View queue</a>
+      </div>
+      <ul class="flex-1 divide-y divide-gf-border/80">
+        @for (wo of approvalQueue(); track wo.id) {
+          <li class="flex flex-wrap items-start justify-between gap-3 px-5 py-3.5 sm:px-6">
+            <div class="min-w-0">
+              <p class="font-mono text-sm font-semibold text-gf-fg">{{ wo.roNumber }}</p>
+              <p class="mt-0.5 truncate text-xs text-gf-fg-muted">
+                {{ customerName(wo.customerId) }} · {{ vehicleReg(wo.vehicleId) }}
+              </p>
+              <p class="mt-2 text-xs leading-relaxed text-gf-fg-muted">{{ wo.nextAction }}</p>
+            </div>
+            <gf-status-badge [label]="statusMeta(wo.status).label" [tone]="statusMeta(wo.status).tone" />
+          </li>
+        } @empty {
+          <li class="px-5 py-12 text-center text-sm text-gf-fg-muted sm:px-6">No approvals waiting.</li>
+        }
+      </ul>
+    </section>
+  </div>
+
+  <div class="mt-6 grid gap-5 lg:grid-cols-12">
+    <section class="gf-card lg:col-span-4">
+      <div class="gf-card-header">
+        <div>
+          <h2 class="gf-card-title">Desk</h2>
+          <p class="gf-card-sub">Common front-desk actions.</p>
+        </div>
+      </div>
+      <div class="grid gap-2 p-4 sm:p-5">
+        <button type="button" class="gf-focus w-full rounded-gf border border-gf-border/90 bg-gf-elevated/60 px-4 py-3 text-left text-sm font-medium text-gf-fg transition hover:border-gf-accent/30 hover:bg-gf-elevated">
+          New walk-in RO
+        </button>
+        <button type="button" class="gf-focus w-full rounded-gf border border-gf-border/90 bg-gf-elevated/60 px-4 py-3 text-left text-sm font-medium text-gf-fg transition hover:border-gf-accent/30 hover:bg-gf-elevated">
+          Parts chase
+        </button>
+        <button type="button" class="gf-focus w-full rounded-gf border border-gf-border/90 bg-gf-elevated/60 px-4 py-3 text-left text-sm font-medium text-gf-fg transition hover:border-gf-accent/30 hover:bg-gf-elevated">
+          Callbacks
+        </button>
+      </div>
+    </section>
+
+    <section class="gf-card lg:col-span-4">
+      <div class="gf-card-header">
+        <div>
+          <h2 class="gf-card-title">Afternoon diary</h2>
+          <p class="gf-card-sub">From 12:00.</p>
+        </div>
+      </div>
+      <ul class="divide-y divide-gf-border/80">
+        @for (b of upcoming(); track b.id) {
+          <li class="px-5 py-3.5 sm:px-6">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="font-medium leading-snug text-gf-fg">{{ b.serviceType }}</p>
+                <p class="mt-0.5 truncate text-xs text-gf-fg-muted">
+                  {{ customerName(b.customerId) }} · {{ vehicleReg(b.vehicleId) }}
+                </p>
+              </div>
+              <p class="shrink-0 font-mono text-xs font-semibold tabular-nums text-gf-fg-muted">
+                {{ b.startsAt | date : 'HH:mm' }}
+              </p>
+            </div>
+            <p class="mt-2 text-[11px] text-gf-fg-muted">
+              {{ b.bay }} · {{ techFirstName(b.technicianId) }}
+            </p>
+          </li>
+        } @empty {
+          <li class="px-5 py-10 text-center text-sm text-gf-fg-muted sm:px-6">Nothing from midday onward.</li>
+        }
+      </ul>
+    </section>
+
+    <section class="gf-card lg:col-span-4">
+      <div class="gf-card-header">
+        <div>
+          <h2 class="gf-card-title">Bays</h2>
+          <p class="gf-card-sub">In progress and parts hold.</p>
+        </div>
+      </div>
+      <ul class="divide-y divide-gf-border/80">
+        @for (row of workshopRows(); track row.bay) {
+          <li class="flex items-start justify-between gap-3 px-5 py-3.5 sm:px-6">
+            <div class="min-w-0">
+              <p class="text-gf-kicker uppercase text-gf-fg-muted">{{ row.bay }}</p>
+              @if (row.workOrder) {
+                <p class="mt-1 font-mono text-sm font-semibold text-gf-fg">{{ row.workOrder.roNumber }}</p>
+                <p class="truncate text-xs text-gf-fg-muted">{{ vehicleReg(row.workOrder.vehicleId) }}</p>
+              } @else {
+                <p class="mt-1 text-sm text-gf-fg-muted">Free bay</p>
+              }
+            </div>
+            @if (row.workOrder) {
+              <gf-status-badge [label]="statusMeta(row.workOrder.status).label" [tone]="statusMeta(row.workOrder.status).tone" />
+            } @else {
+              <span class="gf-pill-quiet">Idle</span>
+            }
+          </li>
+        }
+      </ul>
+    </section>
+  </div>
+</div>
