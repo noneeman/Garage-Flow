@@ -14,6 +14,10 @@ export const routes: Routes = [
         path: 'work-orders',
         loadComponent: () => import('./features/work-orders/work-orders-page.component').then((m) => m.WorkOrdersPageComponent),
       },
+      {
+        path: 'customers',
+        loadComponent: () => import('./features/customers/customers-page.component').then((m) => m.CustomersPageComponent),
+      },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },

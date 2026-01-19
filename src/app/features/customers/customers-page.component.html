@@ -1,0 +1,216 @@
+<div class="gf-page">
+  <header class="gf-page-head">
+    <div>
+      <p class="gf-page-kicker">Customers</p>
+      <h1 class="gf-page-title">Customers & vehicles</h1>
+      <p class="gf-page-desc">Vehicles, warnings, open ROs, and invoices on one profile.</p>
+    </div>
+  </header>
+
+  <div class="grid gap-6 lg:grid-cols-12 lg:gap-8">
+    <aside class="lg:col-span-4 xl:col-span-3">
+      <div class="gf-card overflow-hidden">
+        <div class="gf-card-header !py-3">
+          <h2 class="gf-card-title">Directory</h2>
+          <p class="gf-card-sub !mt-0">{{ data.customers().length }} accounts</p>
+        </div>
+        <ul class="max-h-[calc(100vh-12rem)] divide-y divide-gf-border/80 overflow-y-auto overscroll-contain">
+          @for (c of data.customers(); track c.id) {
+            <li>
+              <button
+                type="button"
+                class="gf-focus flex w-full gap-3 px-4 py-3.5 text-left transition-colors hover:bg-gf-elevated/70 sm:px-5"
+                [class.gf-customer-row-active]="selectedId() === c.id"
+                (click)="select(c)"
+              >
+                <span
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-gf border border-gf-border/80 bg-gf-elevated font-display text-sm font-semibold text-gf-accent shadow-gf-inset"
+                  >{{ c.name.charAt(0) }}</span
+                >
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate font-medium leading-snug text-gf-fg">{{ displayName(c) }}</span>
+                  @if (secondaryLine(c); as sub) {
+                    <span class="mt-0.5 block truncate text-xs text-gf-fg-muted">{{ sub }}</span>
+                  }
+                  @if (c.tags.length) {
+                    <span class="mt-2 flex flex-wrap gap-1">
+                      @for (tag of c.tags; track tag) {
+                        <span class="gf-pill-quiet !text-[10px]">{{ tag }}</span>
+                      }
+                    </span>
+                  }
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      </div>
+    </aside>
+
+    <section class="lg:col-span-8 xl:col-span-9">
+      @if (selected(); as c) {
+        @let st = selectedStats();
+        <div class="space-y-6">
+          <div class="gf-card overflow-hidden">
+            <div class="gf-card-header items-center">
+              <div>
+                <p class="gf-page-kicker !mb-0">Account</p>
+                <h2 class="mt-1 font-display text-2xl font-semibold tracking-tight text-gf-fg">{{ displayName(c) }}</h2>
+                <p class="mt-1 text-sm text-gf-fg-muted">
+                  Preferred contact: <span class="font-medium text-gf-fg">{{ c.preferredContact }}</span>
+                  @if (c.accountCode) {
+                    · Ref <span class="font-mono text-gf-fg">{{ c.accountCode }}</span>
+                  }
+                </p>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <a class="gf-btn-secondary px-3 py-2 text-xs" [href]="'tel:' + c.phone">Call</a>
+                <a class="gf-btn-secondary px-3 py-2 text-xs" [href]="'mailto:' + c.email">Email</a>
+              </div>
+            </div>
+            @if (st) {
+              <div class="grid grid-cols-2 gap-px border-t border-gf-border/80 bg-gf-border/80 sm:grid-cols-4">
+                <div class="bg-gf-surface px-4 py-4 sm:px-5">
+                  <p class="text-gf-kicker uppercase text-gf-fg-muted">Vehicles</p>
+                  <p class="mt-1 font-display text-xl font-semibold tabular-nums text-gf-fg">{{ st.vehicles }}</p>
+                </div>
+                <div class="bg-gf-surface px-4 py-4 sm:px-5">
+                  <p class="text-gf-kicker uppercase text-gf-fg-muted">Open ROs</p>
+                  <p class="mt-1 font-display text-xl font-semibold tabular-nums text-gf-fg">{{ st.openRos }}</p>
+                </div>
+                <div class="bg-gf-surface px-4 py-4 sm:px-5">
+                  <p class="text-gf-kicker uppercase text-gf-fg-muted">Bookings</p>
+                  <p class="mt-1 font-display text-xl font-semibold tabular-nums text-gf-fg">{{ st.bookings }}</p>
+                </div>
+                <div class="bg-gf-surface px-4 py-4 sm:px-5">
+                  <p class="text-gf-kicker uppercase text-gf-fg-muted">Billed</p>
+                  <p class="mt-1 font-display text-xl font-semibold tabular-nums text-gf-fg">
+                    {{ st.invoiced | currency : 'EUR' : 'symbol' : '1.0-0' : 'en-IE' }}
+                  </p>
+                </div>
+              </div>
+            }
+            <dl class="grid gap-6 border-t border-gf-border/80 p-5 sm:grid-cols-2 sm:p-6">
+              <div>
+                <dt class="text-gf-kicker uppercase text-gf-fg-muted">Phone</dt>
+                <dd class="mt-2 font-mono text-sm text-gf-fg">{{ c.phone }}</dd>
+              </div>
+              <div>
+                <dt class="text-gf-kicker uppercase text-gf-fg-muted">Email</dt>
+                <dd class="mt-2 break-all text-sm text-gf-fg">{{ c.email }}</dd>
+              </div>
+            </dl>
+            @if (c.notes) {
+              <div class="border-t border-gf-border/80 bg-gf-elevated/35 px-5 py-4 sm:px-6 dark:bg-gf-elevated/15">
+                <p class="text-gf-kicker uppercase text-gf-fg-muted">Notes</p>
+                <p class="mt-2 text-sm leading-relaxed text-gf-fg">{{ c.notes }}</p>
+              </div>
+            }
+          </div>
+
+          <div class="gf-card overflow-hidden">
+            <div class="gf-card-header">
+              <div>
+                <h3 class="gf-card-title">Vehicles on file</h3>
+                <p class="gf-card-sub">Odometer and service memory — warnings show before you book labour.</p>
+              </div>
+            </div>
+            <div class="divide-y divide-gf-border/80">
+              @for (v of data.vehiclesForCustomer(c.id); track v.id) {
+                <div class="px-5 py-5 sm:px-6">
+                  <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div class="min-w-0">
+                      <p class="font-mono text-sm font-semibold tracking-tight text-gf-fg">{{ v.reg }}</p>
+                      <p class="mt-1 text-sm text-gf-fg-muted">{{ v.year }} {{ v.make }} {{ v.model }} {{ v.trim }}</p>
+                      <div class="mt-3 flex flex-wrap gap-3 text-xs text-gf-fg-muted">
+                        <span>Odometer <span class="font-mono font-medium text-gf-fg">{{ v.mileage | number }} km</span></span>
+                        <span>Last service <span class="font-mono text-gf-fg">{{ v.lastServiceDate | date : 'mediumDate' }}</span></span>
+                        @if (v.nextServiceDue) {
+                          <span>Next due <span class="font-mono text-gf-fg">{{ v.nextServiceDue | date : 'mediumDate' }}</span></span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  @if (v.warnings.length) {
+                    <ul class="mt-4 space-y-2">
+                      @for (w of v.warnings; track w) {
+                        <li
+                          class="flex gap-2 rounded-gf border border-gf-warn/20 bg-gf-warn/[0.06] px-3 py-2 text-xs leading-relaxed text-gf-fg dark:bg-gf-warn/[0.1]"
+                        >
+                          <span class="shrink-0 font-semibold text-gf-warn">!</span>
+                          {{ w }}
+                        </li>
+                      }
+                    </ul>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="grid gap-6 lg:grid-cols-2">
+            <div class="gf-card overflow-hidden">
+              <div class="gf-card-header">
+                <div>
+                  <h3 class="gf-card-title">Work history</h3>
+                  <p class="gf-card-sub">Recent repair orders for this account.</p>
+                </div>
+              </div>
+              <ul class="divide-y divide-gf-border/80">
+                @for (wo of data.workOrdersForCustomer(c.id); track wo.id) {
+                  <li class="flex items-start justify-between gap-3 px-5 py-3.5 sm:px-6">
+                    <div class="min-w-0">
+                      <p class="font-mono text-xs font-semibold text-gf-fg">{{ wo.roNumber }}</p>
+                      <p class="mt-0.5 text-xs text-gf-fg-muted">
+                        {{ wo.openedAt | date : 'mediumDate' }} · {{ data.vehicleById(wo.vehicleId)?.reg }}
+                      </p>
+                      <p class="mt-2 line-clamp-2 text-xs leading-relaxed text-gf-fg-muted">{{ wo.concern }}</p>
+                    </div>
+                    <gf-status-badge [label]="woMeta(wo.status).label" [tone]="woMeta(wo.status).tone" />
+                  </li>
+                } @empty {
+                  <li class="px-5 py-10 text-center text-sm text-gf-fg-muted sm:px-6">No repair orders yet.</li>
+                }
+              </ul>
+            </div>
+
+            <div class="gf-card overflow-hidden">
+              <div class="gf-card-header">
+                <div>
+                  <h3 class="gf-card-title">Invoices</h3>
+                  <p class="gf-card-sub">Latest documents on file.</p>
+                </div>
+              </div>
+              <ul class="divide-y divide-gf-border/80">
+                @for (inv of data.invoicesForCustomer(c.id); track inv.id) {
+                  <li class="flex items-center justify-between gap-3 px-5 py-3.5 sm:px-6">
+                    <div class="min-w-0">
+                      <p class="font-mono text-xs font-semibold text-gf-fg">{{ inv.number }}</p>
+                      <p class="text-xs text-gf-fg-muted">{{ inv.issuedAt | date : 'mediumDate' }}</p>
+                    </div>
+                    <div class="text-right">
+                      <p class="font-mono text-xs font-semibold tabular-nums text-gf-fg">
+                        {{ inv.total | currency : 'EUR' : 'symbol' : '1.0-0' : 'en-IE' }}
+                      </p>
+                      <p class="text-[11px] capitalize text-gf-fg-muted">{{ inv.status }}</p>
+                    </div>
+                  </li>
+                } @empty {
+                  <li class="px-5 py-10 text-center text-sm text-gf-fg-muted sm:px-6">No invoices on file.</li>
+                }
+              </ul>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <gf-empty-state title="Select an account" message="Choose a customer from the directory.">
+          <svg icon class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+        </gf-empty-state>
+      }
+    </section>
+  </div>
+</div>
