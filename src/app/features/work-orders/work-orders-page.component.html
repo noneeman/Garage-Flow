@@ -1,0 +1,342 @@
+<div class="gf-page">
+  <header class="gf-page-head">
+    <div>
+      <p class="gf-page-kicker">Repair orders</p>
+      <h1 class="gf-page-title">Work orders</h1>
+      <p class="gf-page-desc">Search combines with the header field. Filter by status, priority, or assigned technician.</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" class="gf-btn-secondary">Export view</button>
+      <button type="button" class="gf-btn-primary">New repair order</button>
+    </div>
+  </header>
+
+  <div class="gf-toolbar mb-5">
+    <div class="grid w-full min-w-0 flex-1 grid-cols-1 gap-4 sm:max-w-none lg:grid-cols-12 lg:gap-5">
+      <div class="lg:col-span-4">
+        <label class="gf-field-label" for="wo-search">Search</label>
+        <input
+          id="wo-search"
+          type="search"
+          class="gf-input"
+          placeholder="RO, customer, reg, notes…"
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+        />
+      </div>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:col-span-8 lg:grid-cols-3">
+        <div class="min-w-0">
+          <label class="gf-field-label" for="wo-status">Status</label>
+          <select id="wo-status" class="gf-select" [ngModel]="status()" (ngModelChange)="status.set($event)">
+            @for (s of statuses; track s) {
+              <option [ngValue]="s">{{ statusOptionLabel(s) }}</option>
+            }
+          </select>
+        </div>
+        <div class="min-w-0">
+          <label class="gf-field-label" for="wo-priority">Priority</label>
+          <select
+            id="wo-priority"
+            class="gf-select"
+            [ngModel]="priorityFilter()"
+            (ngModelChange)="priorityFilter.set($event)"
+          >
+            @for (p of priorities; track p) {
+              <option [ngValue]="p">{{ priorityOptionLabel(p) }}</option>
+            }
+          </select>
+        </div>
+        <div class="min-w-0">
+          <label class="gf-field-label" for="wo-tech">Technician</label>
+          <select id="wo-tech" class="gf-select" [ngModel]="technicianId()" (ngModelChange)="technicianId.set($event)">
+            <option [ngValue]="'all'">All technicians</option>
+            @for (t of data.technicians(); track t.id) {
+              <option [ngValue]="t.id">{{ t.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+    @if (filtersActive()) {
+      <button type="button" class="gf-btn-ghost w-full shrink-0 text-xs sm:w-auto sm:self-end sm:text-sm" (click)="clearFilters()">
+        Clear filters
+      </button>
+    }
+  </div>
+
+  @if (filtered().length === 0) {
+    <gf-empty-state
+      title="No matching repair orders"
+      message="Nothing in the list matches your search or filters. Widen status, priority, technician, or clear filters to see the full board."
+      [actionLabel]="filtersActive() ? 'Clear filters' : undefined"
+      (action)="clearFilters()"
+    >
+      <svg icon class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+        <rect x="9" y="3" width="6" height="4" rx="1" />
+        <path d="M9 12h6M9 16h4" />
+      </svg>
+    </gf-empty-state>
+  } @else {
+    <div class="gf-table-wrap">
+      <table class="gf-table">
+        <thead>
+          <tr>
+            <th class="w-[8.5rem] sm:w-36">RO</th>
+            <th>Customer / vehicle</th>
+            <th class="hidden lg:table-cell">Technician</th>
+            <th class="min-w-[7.5rem]">Status</th>
+            <th class="hidden md:table-cell">Opened</th>
+            <th class="text-right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (wo of filtered(); track wo.id) {
+            <tr
+              class="gf-focus cursor-pointer focus-visible:bg-gf-elevated/70"
+              (click)="openDetail(wo)"
+              (keydown.enter)="openDetail(wo)"
+              (keydown.space)="$event.preventDefault(); openDetail(wo)"
+              tabindex="0"
+              role="button"
+            >
+              <td class="align-top">
+                <div class="flex flex-col gap-1.5">
+                  <span class="font-mono text-xs font-semibold leading-none text-gf-fg">{{ wo.roNumber }}</span>
+                  <span [class]="priorityChipClass(wo.priority)">{{ priorityLabel(wo.priority) }}</span>
+                </div>
+              </td>
+              <td class="align-top">
+                <p class="font-medium leading-snug text-gf-fg">{{ data.customerById(wo.customerId)?.name }}</p>
+                <p class="mt-0.5 text-xs text-gf-fg-muted">
+                  {{ data.vehicleById(wo.vehicleId)?.reg }} · {{ wo.mileageIn | number }} km
+                </p>
+                <p class="mt-1 text-[11px] font-medium uppercase tracking-wide text-gf-fg-muted/90">
+                  {{ jobCategoryLabel(wo.jobCategory) }}
+                </p>
+                <p class="mt-1 text-xs text-gf-fg-muted lg:hidden">{{ data.technicianById(wo.technicianId)?.name }}</p>
+              </td>
+              <td class="hidden align-top text-sm leading-snug text-gf-fg-muted lg:table-cell">
+                {{ data.technicianById(wo.technicianId)?.name }}
+              </td>
+              <td class="align-top">
+                <gf-status-badge
+                  [label]="statusMeta(wo.status).label"
+                  [tone]="statusMeta(wo.status).tone"
+                  extraClass="max-w-[10.5rem] sm:max-w-[13rem]"
+                />
+              </td>
+              <td class="hidden align-top font-mono text-xs tabular-nums leading-snug text-gf-fg-muted md:table-cell">
+                {{ wo.openedAt | date : 'd MMM yyyy, HH:mm' }}
+              </td>
+              <td class="align-top text-right font-mono text-xs font-semibold tabular-nums leading-snug text-gf-fg">
+                {{ wo.total | currency : 'EUR' : 'symbol' : '1.0-0' : 'en-IE' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<gf-drawer
+  [open]="drawerOpen()"
+  [title]="selected()?.roNumber ?? ''"
+  eyebrow="Repair order"
+  [subtitle]="drawerSubtitle()"
+  (close)="closeDetail()"
+>
+  @if (selected(); as wo) {
+    <div class="space-y-6">
+      <div class="rounded-gf-lg border border-gf-border/90 bg-gf-elevated/50 p-4 dark:bg-gf-elevated/25">
+        <p class="text-gf-kicker uppercase text-gf-fg-muted">Job path</p>
+        <ol class="mt-3 flex flex-wrap items-center gap-y-2">
+          @for (step of workflowLabels; track step; let i = $index) {
+            <li class="flex items-center">
+              @let st = stepState(wo, i);
+              <span
+                class="flex h-7 min-w-[1.75rem] items-center justify-center rounded-full border px-2 text-[11px] font-semibold tabular-nums"
+                [class.border-gf-accent]="st === 'current'"
+                [class.bg-gf-accent]="st === 'done'"
+                [class.text-gf-accent-fg]="st === 'done'"
+                [class.border-gf-border]="st !== 'current'"
+                [class.bg-gf-surface]="st === 'todo' || st === 'current'"
+                [class.text-gf-fg]="st === 'current'"
+                [class.text-gf-fg-muted]="st === 'todo'"
+                >{{ i + 1 }}</span
+              >
+              <span class="ml-2 text-xs font-medium text-gf-fg">{{ step }}</span>
+              @if (i < workflowLabels.length - 1) {
+                <span class="mx-2 text-gf-fg-muted/40" aria-hidden="true">→</span>
+              }
+            </li>
+          }
+        </ol>
+        @if (wo.status === 'completed') {
+          <p class="mt-3 text-xs text-gf-fg-muted">Closed — path retained.</p>
+        }
+      </div>
+
+      <div class="flex flex-wrap gap-2 border-b border-gf-border/80 pb-1">
+        @for (tab of drawerTabs; track tab.id) {
+          <button
+            type="button"
+            class="gf-focus -mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors"
+            [class.border-gf-accent]="drawerTab() === tab.id"
+            [class.text-gf-fg]="drawerTab() === tab.id"
+            [class.border-transparent]="drawerTab() !== tab.id"
+            [class.text-gf-fg-muted]="drawerTab() !== tab.id"
+            (click)="setTab(tab.id)"
+          >
+            {{ tab.label }}
+          </button>
+        }
+      </div>
+
+      @if (drawerTab() === 'overview') {
+        <div class="space-y-5">
+          <div class="flex flex-wrap items-start gap-2 sm:gap-3">
+            <gf-status-badge [label]="statusMeta(wo.status).label" [tone]="statusMeta(wo.status).tone" />
+            <span [class]="priorityChipClass(wo.priority)">{{ priorityLabel(wo.priority) }}</span>
+            <span class="gf-pill-quiet">Estimate: {{ approvalLabel(wo) }}</span>
+            <span class="gf-pill-quiet">{{ jobCategoryLabel(wo.jobCategory) }}</span>
+          </div>
+
+          <div
+            class="rounded-gf-lg border border-gf-warn/25 bg-gf-warn/[0.06] px-4 py-3 text-sm leading-relaxed text-gf-fg dark:bg-gf-warn/[0.09]"
+          >
+            <p class="text-gf-kicker uppercase text-gf-warn">Next action</p>
+            <p class="mt-1">{{ wo.nextAction }}</p>
+            @if (wo.partsEta) {
+              <p class="mt-2 font-mono text-xs text-gf-fg-muted">
+                Parts ETA {{ wo.partsEta | date : 'EEE d MMM, HH:mm' }}
+              </p>
+            }
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="rounded-gf-lg border border-gf-border/90 bg-gf-elevated/40 p-4 dark:bg-gf-elevated/20">
+              <p class="text-gf-kicker uppercase text-gf-fg-muted">Customer</p>
+              <p class="mt-2 font-medium text-gf-fg">{{ data.customerById(wo.customerId)?.name }}</p>
+              <p class="mt-1 font-mono text-xs text-gf-fg-muted">{{ data.customerById(wo.customerId)?.phone }}</p>
+            </div>
+            <div class="rounded-gf-lg border border-gf-border/90 bg-gf-elevated/40 p-4 dark:bg-gf-elevated/20">
+              <p class="text-gf-kicker uppercase text-gf-fg-muted">Vehicle</p>
+              <p class="mt-2 font-medium text-gf-fg">
+                {{ data.vehicleById(wo.vehicleId)?.year }} {{ data.vehicleById(wo.vehicleId)?.make }}
+                {{ data.vehicleById(wo.vehicleId)?.model }}
+              </p>
+              <p class="mt-1 font-mono text-xs text-gf-fg-muted">{{ data.vehicleById(wo.vehicleId)?.reg }}</p>
+            </div>
+          </div>
+
+          <div>
+            <p class="text-gf-kicker uppercase text-gf-fg-muted">Customer concern</p>
+            <p class="mt-2 text-sm leading-relaxed text-gf-fg">{{ wo.concern }}</p>
+          </div>
+          <div>
+            <p class="text-gf-kicker uppercase text-gf-fg-muted">Workshop notes</p>
+            <p class="mt-2 text-sm leading-relaxed text-gf-fg">{{ wo.internalNotes || '—' }}</p>
+          </div>
+
+          <div class="grid gap-4 border-t border-gf-border/80 pt-5 sm:grid-cols-2">
+            <div>
+              <p class="text-gf-kicker uppercase text-gf-fg-muted">Assignment</p>
+              <p class="mt-2 text-sm text-gf-fg">{{ data.technicianById(wo.technicianId)?.name }}</p>
+              <p class="text-sm text-gf-fg-muted">Advisor {{ wo.advisor }}</p>
+              <p class="text-sm text-gf-fg-muted">Bay {{ wo.bay ?? '—' }}</p>
+            </div>
+            <div>
+              <p class="text-gf-kicker uppercase text-gf-fg-muted">Promise</p>
+              <p class="mt-2 font-mono text-sm text-gf-fg">
+                {{ wo.promisedBy ? (wo.promisedBy | date : 'EEE d MMM, HH:mm') : 'Not set' }}
+              </p>
+              <p class="mt-1 text-xs text-gf-fg-muted">Opened {{ wo.openedAt | date : 'd MMM yyyy, HH:mm' }}</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2 border-t border-gf-border/80 pt-5">
+            <button type="button" class="gf-btn-secondary text-sm">Log progress</button>
+            <button type="button" class="gf-btn-secondary text-sm">Request approval</button>
+            <button type="button" class="gf-btn-primary text-sm">Mark ready</button>
+          </div>
+        </div>
+      }
+
+      @if (drawerTab() === 'lines') {
+        <div class="gf-table-embed">
+          <table class="gf-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th class="hidden sm:table-cell">Type</th>
+                <th class="text-right">Qty</th>
+                <th class="text-right">Line</th>
+                <th>Auth</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of wo.lines; track line.id) {
+                <tr>
+                  <td>
+                    <p class="font-medium leading-snug text-gf-fg">{{ line.description }}</p>
+                    <p class="font-mono text-[11px] text-gf-fg-muted">{{ line.code }}</p>
+                  </td>
+                  <td class="hidden capitalize text-gf-fg-muted sm:table-cell">{{ line.type }}</td>
+                  <td class="text-right font-mono text-xs tabular-nums">{{ line.qty }}</td>
+                  <td class="text-right font-mono text-xs font-medium tabular-nums text-gf-fg">
+                    {{ line.qty * line.unitPrice | currency : 'EUR' : 'symbol' : '1.0-2' : 'en-IE' }}
+                  </td>
+                  <td>
+                    @if (line.approved) {
+                      <span class="text-xs font-medium text-gf-ok">Approved</span>
+                    } @else {
+                      <span class="text-xs font-medium text-gf-warn">Quoted</span>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" class="py-10 text-center text-sm text-gf-fg-muted">No lines on this RO.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-5 grid gap-2 rounded-gf-lg border border-gf-border/90 bg-gf-elevated/30 p-4 text-sm dark:bg-gf-elevated/15">
+          <div class="flex justify-between gap-3">
+            <span class="text-gf-fg-muted">Labour</span>
+            <span class="font-mono font-medium tabular-nums text-gf-fg">{{ wo.subtotalLabor | currency : 'EUR' : 'symbol' : '1.0-2' : 'en-IE' }}</span>
+          </div>
+          <div class="flex justify-between gap-3">
+            <span class="text-gf-fg-muted">Parts</span>
+            <span class="font-mono font-medium tabular-nums text-gf-fg">{{ wo.subtotalParts | currency : 'EUR' : 'symbol' : '1.0-2' : 'en-IE' }}</span>
+          </div>
+          <div class="flex justify-between gap-3 border-t border-gf-border/70 pt-2 font-semibold">
+            <span class="text-gf-fg">Total (incl. tax)</span>
+            <span class="font-mono tabular-nums text-gf-fg">{{ wo.total | currency : 'EUR' : 'symbol' : '1.0-2' : 'en-IE' }}</span>
+          </div>
+        </div>
+      }
+
+      @if (drawerTab() === 'activity') {
+        <ul class="space-y-3">
+          @for (p of wo.progress; track $index) {
+            <li class="relative rounded-gf-lg border border-gf-border/90 bg-gf-elevated/35 pl-4 pr-3 py-3 dark:bg-gf-elevated/15">
+              <span class="absolute left-0 top-3 h-8 w-0.5 rounded-full bg-gf-accent" aria-hidden="true"></span>
+              <p class="text-sm leading-relaxed text-gf-fg">{{ p.note }}</p>
+              <p class="mt-2 font-mono text-[11px] text-gf-fg-muted">
+                {{ p.at | date : 'd MMM yyyy, HH:mm' }} · {{ p.by }}
+              </p>
+            </li>
+          } @empty {
+            <li class="rounded-gf-lg border border-dashed border-gf-border/90 py-10 text-center text-sm text-gf-fg-muted">
+              No workshop entries yet.
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</gf-drawer>
