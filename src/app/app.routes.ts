@@ -22,6 +22,10 @@ export const routes: Routes = [
         path: 'schedule',
         loadComponent: () => import('./features/schedule/schedule-page.component').then((m) => m.SchedulePageComponent),
       },
+      {
+        path: 'estimates',
+        loadComponent: () => import('./features/estimates/estimates-page.component').then((m) => m.EstimatesPageComponent),
+      },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },

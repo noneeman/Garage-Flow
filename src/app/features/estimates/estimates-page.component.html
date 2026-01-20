@@ -1,0 +1,98 @@
+<div class="gf-page">
+  <header class="gf-page-head">
+    <div>
+      <p class="gf-page-kicker">Billing</p>
+      <h1 class="gf-page-title">Estimates & invoices</h1>
+      <p class="gf-page-desc">Estimates and invoices tied to the same RO numbers as the workshop file.</p>
+    </div>
+  </header>
+
+  <div class="grid gap-8 lg:grid-cols-2 lg:gap-10">
+    <section>
+      <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 class="font-display text-lg font-semibold text-gf-fg">Estimates</h2>
+          <p class="mt-1 text-xs text-gf-fg-muted">Awaiting send or customer reply.</p>
+        </div>
+        <button type="button" class="gf-btn-primary px-3 py-2 text-xs">New estimate</button>
+      </div>
+      <div class="gf-table-wrap">
+        <table class="gf-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th class="hidden sm:table-cell">Customer</th>
+              <th class="text-right">Total</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of data.estimates(); track e.id) {
+              <tr>
+                <td>
+                  <p class="font-medium leading-snug text-gf-fg">{{ e.title }}</p>
+                  <p class="mt-0.5 font-mono text-[11px] text-gf-fg-muted">Valid to {{ e.validUntil | date : 'mediumDate' }}</p>
+                </td>
+                <td class="hidden text-sm text-gf-fg-muted sm:table-cell">
+                  {{ data.customerById(e.customerId)?.name }}
+                </td>
+                <td class="text-right font-mono text-xs font-semibold tabular-nums text-gf-fg">
+                  {{ e.total | currency : 'EUR' : 'symbol' : '1.0-0' : 'en-IE' }}
+                </td>
+                <td>
+                  <gf-status-badge [label]="estMeta(e.status).label" [tone]="estMeta(e.status).tone" />
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 class="font-display text-lg font-semibold text-gf-fg">Invoices</h2>
+          <p class="mt-1 text-xs text-gf-fg-muted">Document and settlement.</p>
+        </div>
+        <button type="button" class="gf-btn-secondary px-3 py-2 text-xs">PDF preview</button>
+      </div>
+      <div class="gf-table-wrap">
+        <table class="gf-table">
+          <thead>
+            <tr>
+              <th>Invoice</th>
+              <th class="hidden md:table-cell">Issued</th>
+              <th class="text-right">Total</th>
+              <th>Document</th>
+              <th>Payment</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (inv of data.invoices(); track inv.id) {
+              <tr>
+                <td class="font-mono text-xs font-semibold text-gf-fg">{{ inv.number }}</td>
+                <td class="hidden text-xs text-gf-fg-muted md:table-cell">{{ inv.issuedAt | date : 'mediumDate' }}</td>
+                <td class="text-right font-mono text-xs font-semibold tabular-nums text-gf-fg">
+                  {{ inv.total | currency : 'EUR' : 'symbol' : '1.0-0' : 'en-IE' }}
+                </td>
+                <td>
+                  <gf-status-badge [label]="invMeta(inv.status).label" [tone]="invMeta(inv.status).tone" />
+                </td>
+                <td>
+                  <gf-status-badge [label]="payMeta(inv.payment).label" [tone]="payMeta(inv.payment).tone" />
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-6 rounded-gf-xl border border-dashed border-gf-border/90 bg-gf-elevated/35 p-5 dark:bg-gf-elevated/15">
+        <p class="text-gf-kicker uppercase text-gf-fg-muted">Invoice preview</p>
+        <p class="mt-2 text-sm leading-relaxed text-gf-fg-muted">Customer PDF would render in this panel.</p>
+        <div class="mt-4 h-44 rounded-gf-lg border border-gf-border/80 bg-gf-surface/80 shadow-gf-inset dark:bg-gf-canvas/50"></div>
+      </div>
+    </section>
+  </div>
+</div>
