@@ -1,0 +1,173 @@
+<div class="gf-page">
+  <header class="gf-page-head">
+    <div>
+      <p class="gf-page-kicker">Diary</p>
+      <h1 class="gf-page-title">Schedule</h1>
+      <p class="gf-page-desc">Bay and technician diary. Day view is chronological; week shows load across dates.</p>
+    </div>
+    <div class="inline-flex rounded-gf border border-gf-border/90 bg-gf-elevated/50 p-1 shadow-gf-inset dark:bg-gf-elevated/25">
+      <button
+        type="button"
+        class="gf-focus rounded-md px-4 py-2 text-sm font-semibold transition-colors"
+        [class.bg-gf-surface]="view() === 'day'"
+        [class.text-gf-fg]="view() === 'day'"
+        [class.shadow-gf-sm]="view() === 'day'"
+        [class.text-gf-fg-muted]="view() !== 'day'"
+        (click)="view.set('day')"
+      >
+        Day
+      </button>
+      <button
+        type="button"
+        class="gf-focus rounded-md px-4 py-2 text-sm font-semibold transition-colors"
+        [class.bg-gf-surface]="view() === 'week'"
+        [class.text-gf-fg]="view() === 'week'"
+        [class.shadow-gf-sm]="view() === 'week'"
+        [class.text-gf-fg-muted]="view() !== 'week'"
+        (click)="view.set('week')"
+      >
+        Week
+      </button>
+    </div>
+  </header>
+
+  @if (view() === 'day') {
+    @let s = daySummary();
+    <div class="mb-5 flex flex-wrap gap-2">
+      <span class="gf-pill-quiet">{{ s.total }} slots today</span>
+      <span class="gf-pill-quiet">{{ s.confirmed }} confirmed</span>
+      <span class="gf-pill-quiet">{{ s.inService }} in service</span>
+      <span class="gf-pill-quiet">{{ s.waiting }} waiting</span>
+      <span class="gf-pill-quiet">{{ s.done }} checked out</span>
+    </div>
+
+    <section class="gf-card overflow-hidden">
+      <div class="gf-card-header">
+        <div>
+          <h2 class="gf-card-title">Tuesday 12 May 2026</h2>
+          <p class="gf-card-sub">Sorted by start time. Row opens detail.</p>
+        </div>
+      </div>
+      <div class="divide-y divide-gf-border/80">
+        @for (b of dayBookings(); track b.id) {
+          <button
+            type="button"
+            (click)="open(b)"
+            class="gf-focus flex w-full gap-0 text-left transition-colors hover:bg-gf-elevated/60 sm:gap-4"
+          >
+            <div
+              class="hidden w-24 shrink-0 border-r border-gf-border/60 bg-gf-subtle/50 px-4 py-4 font-mono text-sm font-semibold tabular-nums text-gf-fg-muted sm:block dark:bg-gf-elevated/30"
+            >
+              {{ b.startsAt | date : 'HH:mm' }}
+            </div>
+            <div class="min-w-0 flex-1 px-4 py-4 sm:pl-5">
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="font-medium leading-snug text-gf-fg">{{ b.serviceType }}</p>
+                <span class="font-mono text-xs text-gf-fg-muted sm:hidden">{{ b.startsAt | date : 'HH:mm' }}</span>
+              </div>
+              <p class="mt-1 truncate text-sm text-gf-fg-muted">
+                {{ data.customerById(b.customerId)?.name }} · {{ data.vehicleById(b.vehicleId)?.reg }}
+              </p>
+              <div class="mt-2 flex flex-wrap items-center gap-2">
+                <span class="gf-pill-quiet">{{ b.bay }}</span>
+                @if (arrivalLabel(b.arrival); as ar) {
+                  <span class="gf-pill-quiet">{{ ar }}</span>
+                }
+                <span class="text-xs text-gf-fg-muted">{{ data.technicianById(b.technicianId)?.name }}</span>
+              </div>
+            </div>
+            <div class="flex shrink-0 items-center px-4 py-4 sm:pr-5">
+              <gf-status-badge [label]="bookingMeta(b.status).label" [tone]="bookingMeta(b.status).tone" />
+            </div>
+          </button>
+        } @empty {
+          <p class="px-5 py-14 text-center text-sm text-gf-fg-muted sm:px-6">No bookings on this day.</p>
+        }
+      </div>
+    </section>
+  } @else {
+    <p class="mb-5 text-sm text-gf-fg-muted">Week of 12 May.</p>
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      @for (col of weekBookings(); track col.day) {
+        <section class="gf-card flex min-h-[16rem] flex-col overflow-hidden">
+          <div class="gf-card-header !py-3">
+            <div>
+              <p class="font-display text-sm font-semibold text-gf-fg">{{ col.day | date : 'EEE d MMM' }}</p>
+              <p class="gf-card-sub !mt-0">{{ col.items.length }} slot(s)</p>
+            </div>
+          </div>
+          <div class="flex flex-1 flex-col gap-2.5 p-3">
+            @for (b of col.items; track b.id) {
+              <button
+                type="button"
+                (click)="open(b)"
+                class="gf-focus rounded-gf border border-gf-border/80 bg-gf-elevated/40 p-3 text-left text-sm transition hover:border-gf-accent/35 hover:bg-gf-elevated/80 dark:bg-gf-elevated/20"
+              >
+                <p class="font-mono text-[11px] font-medium tabular-nums text-gf-fg-muted">
+                  {{ b.startsAt | date : 'HH:mm' }}–{{ b.endsAt | date : 'HH:mm' }}
+                </p>
+                <p class="mt-1.5 font-medium leading-snug text-gf-fg">{{ b.serviceType }}</p>
+                <p class="mt-0.5 truncate text-xs text-gf-fg-muted">{{ data.customerById(b.customerId)?.name }}</p>
+                <div class="mt-2 flex items-center justify-between gap-2">
+                  <span class="text-[10px] font-semibold uppercase tracking-wide text-gf-fg-muted">{{ b.bay }}</span>
+                  <gf-status-badge [label]="bookingMeta(b.status).label" [tone]="bookingMeta(b.status).tone" />
+                </div>
+              </button>
+            } @empty {
+              <p class="flex flex-1 items-center justify-center py-8 text-center text-xs text-gf-fg-muted">Clear</p>
+            }
+          </div>
+        </section>
+      }
+    </div>
+  }
+</div>
+
+<gf-drawer
+  [open]="drawerOpen()"
+  [title]="selected()?.serviceType ?? ''"
+  eyebrow="Booking"
+  [subtitle]="drawerSubtitle()"
+  (close)="close()"
+>
+  @if (selected(); as b) {
+    <div class="space-y-5 text-sm">
+      <div class="flex flex-wrap gap-2">
+        <gf-status-badge [label]="bookingMeta(b.status).label" [tone]="bookingMeta(b.status).tone" />
+        <span class="gf-pill-quiet">{{ b.bay }}</span>
+        @if (arrivalLabel(b.arrival); as ar) {
+          <span class="gf-pill-quiet">{{ ar }}</span>
+        }
+      </div>
+      <dl class="grid gap-4 rounded-gf-lg border border-gf-border/90 bg-gf-elevated/35 p-4 dark:bg-gf-elevated/15">
+        <div>
+          <dt class="text-gf-kicker uppercase text-gf-fg-muted">Window</dt>
+          <dd class="mt-1 font-mono text-gf-fg">{{ b.startsAt | date : 'EEE d MMM, HH:mm' }} – {{ b.endsAt | date : 'HH:mm' }}</dd>
+        </div>
+        <div>
+          <dt class="text-gf-kicker uppercase text-gf-fg-muted">Customer</dt>
+          <dd class="mt-1 text-gf-fg">{{ data.customerById(b.customerId)?.name }}</dd>
+        </div>
+        <div>
+          <dt class="text-gf-kicker uppercase text-gf-fg-muted">Vehicle</dt>
+          <dd class="mt-1 font-mono text-gf-fg">{{ data.vehicleById(b.vehicleId)?.reg }}</dd>
+        </div>
+        <div>
+          <dt class="text-gf-kicker uppercase text-gf-fg-muted">Technician</dt>
+          <dd class="mt-1 text-gf-fg">{{ data.technicianById(b.technicianId)?.name }}</dd>
+        </div>
+        @if (b.notes) {
+          <div>
+            <dt class="text-gf-kicker uppercase text-gf-fg-muted">Front desk notes</dt>
+            <dd class="mt-1 leading-relaxed text-gf-fg">{{ b.notes }}</dd>
+          </div>
+        }
+      </dl>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="gf-btn-secondary text-sm">Mark arrived</button>
+        <button type="button" class="gf-btn-secondary text-sm">Move bay</button>
+        <button type="button" class="gf-btn-primary text-sm">Open repair order</button>
+      </div>
+    </div>
+  }
+</gf-drawer>

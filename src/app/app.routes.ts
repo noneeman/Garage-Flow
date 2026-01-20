@@ -18,6 +18,10 @@ export const routes: Routes = [
         path: 'customers',
         loadComponent: () => import('./features/customers/customers-page.component').then((m) => m.CustomersPageComponent),
       },
+      {
+        path: 'schedule',
+        loadComponent: () => import('./features/schedule/schedule-page.component').then((m) => m.SchedulePageComponent),
+      },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },
