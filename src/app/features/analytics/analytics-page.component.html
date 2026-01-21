@@ -1,0 +1,136 @@
+<div class="gf-page">
+  <header class="gf-page-head">
+    <div>
+      <p class="gf-page-kicker">Analytics</p>
+      <h1 class="gf-page-title">Performance</h1>
+      <p class="gf-page-desc">Revenue, mix, pipeline, and technician numbers for the week.</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" class="gf-btn-secondary">Export CSV</button>
+      <button type="button" class="gf-btn-secondary">Workshop pack (PDF)</button>
+    </div>
+  </header>
+
+  <div class="mb-6 rounded-gf-lg border border-gf-border/90 bg-gf-elevated/40 px-4 py-3 text-sm text-gf-fg-muted dark:bg-gf-elevated/20 sm:px-5">
+    Week ending <span class="font-mono font-medium text-gf-fg">12 May 2026</span>
+    @if (revenueInsight(); as ri) {
+      <span class="mt-1 block sm:mt-0 sm:inline sm:before:content-['·'] sm:before:px-1">
+        vs prior week:
+        <span [class.text-gf-ok]="ri.delta >= 0" [class.text-gf-danger]="ri.delta < 0" class="font-mono font-semibold">
+          {{ ri.delta >= 0 ? '+' : '' }}{{ ri.delta | currency : 'EUR' : 'symbol' : '1.0-0' : 'en-IE' }}
+        </span>
+        <span class="font-mono">({{ ri.pct >= 0 ? '+' : '' }}{{ ri.pct }}%)</span>
+      </span>
+    }
+  </div>
+
+  @let snap = data.analyticsSnapshot();
+  @let parts = snap.partsVsLabor;
+
+  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="gf-card p-5 sm:p-6">
+      <p class="text-gf-kicker uppercase text-gf-fg-muted">Avg turnaround</p>
+      <p class="mt-3 font-display text-2xl font-semibold tabular-nums text-gf-fg">{{ snap.avgTurnaroundHrs | number : '1.1-1' }} h</p>
+      <p class="mt-2 text-xs leading-relaxed text-gf-fg-muted">RO opened to invoice closed.</p>
+    </div>
+    <div class="gf-card p-5 sm:p-6">
+      <p class="text-gf-kicker uppercase text-gf-fg-muted">Line approval rate</p>
+      <p class="mt-3 font-display text-2xl font-semibold tabular-nums text-gf-fg">{{ snap.approvalRatePct }}%</p>
+      <p class="mt-2 text-xs leading-relaxed text-gf-fg-muted">Approved lines vs quoted lines.</p>
+    </div>
+    <div class="gf-card p-5 sm:p-6">
+      <p class="text-gf-kicker uppercase text-gf-fg-muted">Accounts</p>
+      <p class="mt-3 font-display text-2xl font-semibold tabular-nums text-gf-fg">{{ snap.distinctCustomerAccounts }}</p>
+      <p class="mt-2 text-xs leading-relaxed text-gf-fg-muted">Customers with at least one RO in this file.</p>
+    </div>
+    <div class="gf-card p-5 sm:p-6">
+      <p class="text-gf-kicker uppercase text-gf-fg-muted">Open RO quoted</p>
+      <p class="mt-3 font-display text-2xl font-semibold tabular-nums text-gf-fg">
+        {{ parts.parts + parts.labor | currency : 'EUR' : 'symbol' : '1.0-0' : 'en-IE' }}
+      </p>
+      <p class="mt-2 text-xs leading-relaxed text-gf-fg-muted">
+        Parts {{ parts.parts | currency : 'EUR' : 'symbol' : '1.0-0' : 'en-IE' }} · Labour
+        {{ parts.labor | currency : 'EUR' : 'symbol' : '1.0-0' : 'en-IE' }}
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-6 grid gap-6 xl:grid-cols-2">
+    <section class="gf-card flex flex-col">
+      <div class="gf-card-header">
+        <div>
+          <h2 class="gf-card-title">Revenue</h2>
+          <p class="gf-card-sub">Weekly closed total.</p>
+        </div>
+      </div>
+      <div class="flex flex-1 flex-col px-5 pb-5 pt-1 sm:px-6 sm:pb-6">
+        <gf-line-chart [labels]="revenueLabels()" [values]="revenueValues()" label="Revenue" formatY="currency" />
+      </div>
+    </section>
+
+    <section class="gf-card flex flex-col">
+      <div class="gf-card-header">
+        <div>
+          <h2 class="gf-card-title">Operations mix</h2>
+          <p class="gf-card-sub">Count by primary job type.</p>
+        </div>
+      </div>
+      <div class="flex flex-1 flex-col px-5 pb-5 pt-1 sm:px-6 sm:pb-6">
+        <gf-bar-chart [labels]="servicesLabels()" [values]="servicesValues()" [horizontal]="true" />
+      </div>
+    </section>
+  </div>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-12">
+    <section class="gf-card lg:col-span-5">
+      <div class="gf-card-header">
+        <div>
+          <h2 class="gf-card-title">Pipeline</h2>
+          <p class="gf-card-sub">Open ROs by status.</p>
+        </div>
+      </div>
+      <div class="flex justify-center px-4 pb-8 pt-2">
+        <gf-donut-chart [labels]="statusLabels()" [values]="statusValues()" />
+      </div>
+    </section>
+
+    <section class="gf-card lg:col-span-7">
+      <div class="gf-card-header">
+        <div>
+          <h2 class="gf-card-title">Technicians</h2>
+          <p class="gf-card-sub">Week to date.</p>
+        </div>
+      </div>
+      <div class="grid gap-3 p-4 sm:grid-cols-2 sm:p-5">
+        @for (tp of data.techPerformance(); track tp.technicianId) {
+          @if (data.technicianById(tp.technicianId); as tech) {
+            <div class="rounded-gf-lg border border-gf-border/90 bg-gf-elevated/40 p-4 dark:bg-gf-elevated/20">
+              <div class="flex items-center justify-between gap-2">
+                <p class="font-medium leading-snug text-gf-fg">{{ tech.name }}</p>
+                <span class="font-mono text-xs text-gf-fg-muted">{{ tech.initials }}</span>
+              </div>
+              <dl class="mt-4 grid grid-cols-2 gap-x-3 gap-y-3 text-xs">
+                <div>
+                  <dt class="text-gf-fg-muted">Jobs closed</dt>
+                  <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums text-gf-fg">{{ tp.jobsClosedWeek }}</dd>
+                </div>
+                <div>
+                  <dt class="text-gf-fg-muted">Comeback %</dt>
+                  <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums text-gf-fg">{{ tp.comebackRatePct | number : '1.1-1' }}</dd>
+                </div>
+                <div>
+                  <dt class="text-gf-fg-muted">Avg turnaround</dt>
+                  <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums text-gf-fg">{{ tp.avgTurnaroundHrs | number : '1.1-1' }} h</dd>
+                </div>
+                <div>
+                  <dt class="text-gf-fg-muted">Billed hours</dt>
+                  <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums text-gf-fg">{{ tp.billedHours | number : '1.1-1' }}</dd>
+                </div>
+              </dl>
+            </div>
+          }
+        }
+      </div>
+    </section>
+  </div>
+</div>
